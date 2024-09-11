@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>转盘</title>
+</head>
+
+<body>
+    <div id="my-lucky" style="margin:10px auto;"></div>
+    <div id="result" style="text-align: center;">当前余额：0块</div> <!-- 显示余额 -->
+    <div style="text-align: center;">真实有效</div>
+    <script src="https://unpkg.com/lucky-canvas@1.7.25"></script>
+    <script>
+        let drawCount = 0; // Initialize draw count
+        const jackpotInterval = 6; // Jackpot occurs every 6 draws
+        let balance = 0; // 初始余额为0
+        const maxDraws = 17; // 最大抽奖次数
+
+        const prizeValues = [2, -4, 3, -2, 0, -6, 5]; // 各个奖项对应的金额变化
+
+        const myLucky = new LuckyCanvas.LuckyWheel('#my-lucky', {
+            width: '300px',
+            height: '300px',
+            blocks: [{ padding: '10px', background: '#617df2' }],
+            prizes: [
+                { background: '#e9e8fe', fonts: [{ text: '加1块 x2' }] },
+                { background: '#b8c5f2', fonts: [{ text: '减2块 x2' }] },
+                { background: '#e9e8fe', fonts: [{ text: '加1块 x3' }] },
+                { background: '#b8c5f2', fonts: [{ text: '减2块' }] },
+                { background: '#e9e8fe', fonts: [{ text: '谢谢惠顾' }] },
+                { background: '#b8c5f2', fonts: [{ text: '减2块 x3' }] },
+                { background: '#ffd700', fonts: [{ text: '大奖加5块' }] }, // 大奖
+            ],
+            buttons: [{
+                radius: '35%',
+                background: '#8a9bf3',
+                pointer: true,
+                fonts: [{ text: '开始', top: '-10px' }]
+            }],
+            start: function () {
+                // 检查是否超过最大抽奖次数
+                if (drawCount >= maxDraws) {
+                    alert('已经达到最大抽奖次数！');
+                    return; // 达到最大次数时，停止抽奖
+                }
+
+                // 开始游戏
+                myLucky.play()
+                // 使用定时器模拟接口
+                setTimeout(() => {
+                    drawCount++;
+
+                    let prizeIndex;
+                    if (drawCount % (jackpotInterval + 1) === 0) {
+                        // Every 7th draw (since count starts at 1 after hitting the jackpot)
+                        prizeIndex = 6; // Stop at jackpot (大奖)
+                        myLucky.stop(prizeIndex);
+                    } else {
+                        // Random stopping for all other draws
+                        prizeIndex = Math.floor(Math.random() * 6); // random between 0 and 5
+                        myLucky.stop(prizeIndex);
+                    }
+
+                    // 更新余额
+                    balance += prizeValues[prizeIndex];
+
+                    // 显示当前余额
+                    document.getElementById('result').innerText = `当前余额：${balance}块`;
+
+                    // 显示每次的抽奖结果
+                    const prizeText = myLucky.config.prizes[prizeIndex].fonts[0].text;
+                    const historyDiv = document.getElementById('history');
+                    historyDiv.innerHTML += `第${drawCount}次抽奖结果：${prizeText}<br>`;
+
+                    // 如果达到最大抽奖次数，禁用按钮
+                    if (drawCount >= maxDraws) {
+                        document.querySelector('#my-lucky button').disabled = true;
+                        alert('抽奖次数已用完！');
+                    }
+
+                }, 3000);
+            }
+        })
+    </script>
+</body>
+
+</html>
